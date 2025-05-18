@@ -1,5 +1,4 @@
 'use client';
-
 import React, {useState, ChangeEvent, useEffect} from 'react';
 import {
     SendTransactionRequest,

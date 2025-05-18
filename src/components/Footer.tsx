@@ -1,13 +1,18 @@
+import { usePathname, useRouter } from 'next/navigation';
 import React from 'react';
 
 const navs = [
   { label: 'Home', icon: '🏠', key: 'home' },
-  { label: 'Rates', icon: '📊', key: 'rates' },
+  { label: 'Market', icon: '📊', key: 'market' },
   { label: 'Task', icon: '📝', key: 'task' },
-  { label: 'Menu', icon: '☰', key: 'menu' },
+  { label: 'More', icon: '☰', key: 'more' },
 ];
 
-export default function Footer({ current, onChange }: { current: string; onChange: (key: string) => void }) {
+export default function Footer() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const current = pathname === '/' ? 'home' : pathname.replace('/', '');
+  console.log(current);
   return (
     <div style={styles.navbar}>
       {navs.map(nav => (
@@ -21,7 +26,8 @@ export default function Footer({ current, onChange }: { current: string; onChang
             fontSize: 13,
             cursor: 'pointer',
           }}
-          onClick={() => onChange(nav.key)}
+          onClick={() => router.push(nav.key === 'home' ? '/' : `/${nav.key}`)}
+      
         >
           <div style={{ fontSize: 22 }}>{nav.icon}</div>
           <div>{nav.label}</div>
