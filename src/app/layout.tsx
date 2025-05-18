@@ -5,7 +5,6 @@ import React from "react";
 import {TonConnectUIProvider} from "@tonconnect/ui-react";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import styles from "@/styles/app";
 
 export default function RootLayout({
                                        children,
@@ -14,7 +13,15 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-        <body style={styles.bg}>
+        <body style={{
+            minHeight: "100vh",
+            background: "#f7f8fa",
+            padding: "0 0 70px 0",
+            position: "relative",
+            fontFamily: "Inter, sans-serif",
+            maxWidth: "480px",
+            margin: "0 auto",
+        }}>
         <TonConnectUIProvider manifestUrl="https://tonloan.com/tonconnect-manifest.json">
         <Header />
             {children}
