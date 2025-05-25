@@ -8,6 +8,7 @@ import {JettonMaster, JettonWallet, TonClient} from "@ton/ton";
 import {getHttpEndpoint} from "@orbs-network/ton-access";
 import {useTonAddress} from "@tonconnect/ui-react";
 import {HermesClient} from "@pythnetwork/hermes-client";
+import { useRouter } from 'next/navigation';
 
 export interface PoolInfo {
     totalShare: bigint;       // 总份额
@@ -364,6 +365,8 @@ const HomePage = () => {
             },
         ],
     };
+
+    const router = useRouter();
     return (
         <div>
             {/* 资产总览 */}
@@ -375,7 +378,7 @@ const HomePage = () => {
                 <div style={{color: "#1ecb81", fontWeight: 600, fontSize: 16}}>
                     NET APY <span>+{mockData.netAPY}%</span>
                 </div>
-                <button style={styles.depositBtn}>Deposit</button>
+                <button style={styles.depositBtn} onClick={() => router.push('/deposit/add-ton')}>Deposit</button>
             </div>
 
             {/* 可借额度与健康因子 */}
