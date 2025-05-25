@@ -24,7 +24,7 @@ export default function MarketPage() {
                             style={language === 'zh' ? { ...styles.menuBtn, ...styles.menuBtnActive } : styles.menuBtn}
                             onClick={() => setLanguage('zh')}
                         >
-                            中文
+                            ру́сскийязы́к
                         </button>
                     </div>
                     {/* 暗黑模式设置 */}

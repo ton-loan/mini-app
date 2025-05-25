@@ -109,7 +109,7 @@ const DepositPage: React.FC = () => {
                 shareAmount: userTonRes.stack.readBigNumber(),
                 principalIndex: userTonRes.stack.readBigNumber(),
             });
-
+            console.log(userTon)
             const userUsdtRes = await client.runMethod(contract, "getUserUsdtDeposit", [
                 {type: "slice", cell: userCell},
             ]);
@@ -117,6 +117,8 @@ const DepositPage: React.FC = () => {
                 shareAmount: userUsdtRes.stack.readBigNumber(),
                 principalIndex: userUsdtRes.stack.readBigNumber(),
             });
+            console.log(userUsdt)
+            console.log(userUsdt.shareAmount?.toString());
         })();
     }, [address]);
 
