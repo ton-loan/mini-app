@@ -43,11 +43,7 @@ export default function BorrowSummaryPage() {
       {/* 币种信息 */}
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 18 }}>
         <img src={asset.icon} alt={asset.name} style={{ width: 48, height: 48, marginRight: 14 }} />
-        <div>
-          <div style={{ fontWeight: 700, fontSize: 24, display: 'flex', alignItems: 'center' }}>
-            {asset.name} <span style={{ fontWeight: 400, fontSize: 16, marginLeft: 10, background: '#eee', borderRadius: 8, padding: '2px 10px' }}>Main Pool</span>
-          </div>
-        </div>
+      
       </div>
       {/* Supply Balance */}
       <div style={{ color: '#888', fontWeight: 500, fontSize: 18, marginBottom: 6 }}>Supply Balance</div>
@@ -75,7 +71,7 @@ export default function BorrowSummaryPage() {
             fontSize: 20,
             cursor: 'pointer',
           }}
-          onClick={() => {/* 跳转到取款页面或弹窗 */}}
+          onClick={() => router.push(`/deposit/withdraw-ton`)}
         >
           <span style={{ marginRight: 8 }}>↩</span> Withdraw
         </button>
@@ -91,7 +87,7 @@ export default function BorrowSummaryPage() {
             fontSize: 20,
             cursor: 'pointer',
           }}
-          onClick={() => router.push(`/deposit/${symbol}`)}
+          onClick={() => router.push(`/deposit/deposit-ton`)}
         >
           <span style={{ marginRight: 8 }}>+</span> Supply more
         </button>

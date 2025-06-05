@@ -6,9 +6,11 @@ import {Address, beginCell, fromNano} from "@ton/core";
 import {PYTH_CONTRACT_ADDRESS_TESTNET, PythContract} from "@pythnetwork/pyth-ton-js";
 import {JettonMaster, JettonWallet, TonClient} from "@ton/ton";
 import {getHttpEndpoint} from "@orbs-network/ton-access";
-import {useTonAddress} from "@tonconnect/ui-react";
+import {useTonAddress, useTonConnectUI, useTonWallet} from "@tonconnect/ui-react";
 import {HermesClient} from "@pythnetwork/hermes-client";
-import { useRouter } from 'next/navigation';
+import {useRouter} from 'next/navigation';
+import {TON_PRICE_FEED_ID, TonClientAPIKey, TonClientEndpoint, TonLoanContract, usdtContractAddress} from "@/config";
+import {CHAIN} from "@tonconnect/sdk";
 
 export interface PoolInfo {
     totalShare: bigint;       // 总份额
@@ -46,20 +48,7 @@ const HomePage = () => {
 
     // 存储用户基本信息
     const userAddress = useTonAddress();
-    const usdtContractAddress = 'kQD0GKBM8ZbryVk2aESmzfU6b9b_8era_IkvBSELujFZPsyy'; // testnet
-    const [myAsset, setMyAsset] = useState<MyAsset>({
-        usdtBalance: 0,
-        totalBalance: 0,
-        tonBalance: 0,
-        netAPY: 0,
-        availableToBorrow: 0,
-        healthFactor: 0
-    });
-
-    // 调用方式：updateMyAssetField("totalBalance", 1000);
-    function updateMyAssetField<K extends keyof MyAsset>(key: K, value: MyAsset[K]) {
-        setMyAsset(prev => ({...prev, [key]: value}));
-    }
+    const userWallet = useTonWallet();
 
     // 存储用户TON质押信息
     const [userTonAsset, setUserTonAsset] = useState<Asset>({
@@ -72,10 +61,6 @@ const HomePage = () => {
         depositAPY: 0,   // 质押年华
     });
 
-    function updateMyTonAssetField<K extends keyof Asset>(key: K, value: Asset[K]) {
-        setUserTonAsset(prev => ({...prev, [key]: value}));
-    }
-
     // 存储用户USDT质押信息
     const [userUsdtAsset, setUserUsdtAsset] = useState<Asset>({
         symbol: 'usdt',     // 资产代码
@@ -86,10 +71,6 @@ const HomePage = () => {
         walletValue: 0,  // 钱包价值
         depositAPY: 0,   // 质押年华
     });
-
-    function updateMyUsdtAssetField<K extends keyof Asset>(key: K, value: Asset[K]) {
-        setUserTonAsset(prev => ({...prev, [key]: value}));
-    }
 
     const [userTonDeposit, setUserTonDeposit] = useState<UserDeposit>({
         principalIndex: 0,
@@ -109,8 +90,8 @@ const HomePage = () => {
 
     // 1.初始化RPC客户端
     const client = new TonClient({
-        endpoint: "https://testnet.toncenter.com/api/v2/jsonRPC",
-        apiKey: "6a0955bc32034c4f0ef76337a1899a8402fae16560a4f7139cb5be05b2dc7177", // Optional
+        endpoint: TonClientEndpoint,
+        apiKey: TonClientAPIKey, // Optional
     });
     // 获取用户Ton和USDT余额
     useEffect(() => {
@@ -118,12 +99,14 @@ const HomePage = () => {
         // 获取ton数量
         const fetchBalance = async () => {
             if (!userAddress) return;
+
+            if (userWallet?.account.chain == CHAIN.MAINNET) {
+                alert('Please use the Testnet work to connect !');
+            }
+
             try {
                 const balance = await client.getBalance(Address.parse(userAddress))
-                setMyAsset(prev => ({
-                    ...prev,
-                    tonBalance: Number(fromNano(balance))
-                }));
+                console.log("用户ton余额：" + fromNano(balance));
                 setUserTonAsset(prev => ({
                     ...prev,
                     walletBalance: Number(fromNano(balance))
@@ -140,8 +123,8 @@ const HomePage = () => {
             // 1. 获取主网入口节点
             // 2. 创建 TonClient 实例
             const client = new TonClient({
-                endpoint: "https://testnet.toncenter.com/api/v2/jsonRPC",
-                apiKey: "6a0955bc32034c4f0ef76337a1899a8402fae16560a4f7139cb5be05b2dc7177", // Optional
+                endpoint: TonClientEndpoint,
+                apiKey: TonClientAPIKey, // Optional
             });
 
             // 3. USDT Jetton Master 地址（来自 STON.fi）
@@ -180,15 +163,14 @@ const HomePage = () => {
     }, [userAddress]);
 
     // 2.初始化预言机配置
-    const TON_PRICE_FEED_ID = "0x8963217838ab4cf5cadc172203c1f0b763fbaa45f346d8ee50ba994bbcac3026";
-    const contractAddress = Address.parse(PYTH_CONTRACT_ADDRESS_TESTNET);
-    const contract = client.open(PythContract.createFromAddress(contractAddress));
-
-    // 从预言机获取Ton最新价格信息
-    const hermesEndpoint = "https://hermes.pyth.network";
-    const hermesClient = new HermesClient(hermesEndpoint);
-
     useEffect(() => {
+
+        const contractAddress = Address.parse(PYTH_CONTRACT_ADDRESS_TESTNET);
+        const contract = client.open(PythContract.createFromAddress(contractAddress));
+
+        // 从预言机获取Ton最新价格信息
+        const hermesEndpoint = "https://hermes.pyth.network";
+        const hermesClient = new HermesClient(hermesEndpoint);
         const fetchGuardianSetIndexAndPrice = async () => {
             try {
                 // 获取当前 guardian set index
@@ -219,10 +201,7 @@ const HomePage = () => {
         fetchGuardianSetIndexAndPrice().then();
     }, []);
 
-    // 3.借贷合约地址
-    const TonLoanContract = Address.parse("kQAPkw7Ukqpc0w5blvPk4AzXRAkZ52fQxfGB3jmQsIIUNaZy");
-
-    // 从借贷合约获取信息
+    // 3.从借贷合约获取信息
     useEffect(() => {
         (async () => {
 
@@ -230,7 +209,10 @@ const HomePage = () => {
             const endpoint = await getHttpEndpoint({network: 'testnet'});
 
             // 创建 TonClient 实例
-            const client = new TonClient({endpoint});
+            const client = new TonClient({
+                endpoint: TonClientEndpoint,
+                apiKey: TonClientAPIKey, // Optional
+            });
             const contract = TonLoanContract;
 
             // 池信息
@@ -258,19 +240,20 @@ const HomePage = () => {
             const userTonRes = await client.runMethod(contract, "getUserTonDeposit", [
                 {type: "slice", cell: userCell},
             ]);
+            ///console.log("用户ton质押数量：" + userTonRes.stack.readBigNumber().toString())
             setUserTonDeposit({
-                shareAmount: userTonRes.stack.readNumber(),
-                principalIndex: userTonRes.stack.readNumber(),
+                shareAmount: Number(fromNano(userTonRes.stack.readBigNumber())),
+                principalIndex: Number(userTonRes.stack.readBigNumber().toString()),
             });
-
+            console.log("用户ton质押数量：" + (userTonDeposit.shareAmount.toFixed(2)));
             const userUsdtRes = await client.runMethod(contract, "getUserUsdtDeposit", [
                 {type: "slice", cell: userCell},
             ]);
             setUserUsdtDeposit({
-                shareAmount: userUsdtRes.stack.readNumber(),
+                shareAmount: userUsdtRes.stack.readNumber() / 1000000,
                 principalIndex: userUsdtRes.stack.readNumber(),
             });
-            console.log(userUsdtDeposit.shareAmount.toString());
+            console.log("用户usdt质押数量：" + userUsdtDeposit.shareAmount.toString());
         })();
     }, [userAddress]);
 
@@ -378,7 +361,7 @@ const HomePage = () => {
                 <div style={{color: "#1ecb81", fontWeight: 600, fontSize: 16}}>
                     NET APY <span>+{mockData.netAPY}%</span>
                 </div>
-                <button style={styles.depositBtn} onClick={() => router.push('/deposit/add-ton')}>Deposit</button>
+                <button style={styles.depositBtn} onClick={() => router.push('/deposit/deposit-ton')}>Deposit</button>
             </div>
 
             {/* 可借额度与健康因子 */}
@@ -448,7 +431,7 @@ const HomePage = () => {
                 <div>
                     {tab === 'assets' && (
                         <>
-                            <div key='TON' style={styles.assetRow}>
+                            <div key='TON' style={styles.assetRow} onClick={() => router.push('/deposit/ton')}>
                                 <img src='/images/ton_logo.png' alt='TON' style={styles.assetIcon}/>
                                 <div style={{flex: 1}}>
                                     <div style={{fontWeight: 700}}>TON</div>
@@ -462,11 +445,11 @@ const HomePage = () => {
                                     <div style={{
                                         color: "#888",
                                         fontSize: 13
-                                    }}>${(userTonAsset.deposit * tonPrice).toFixed(2)}</div>
+                                    }}>${(userTonDeposit.shareAmount * userTonDeposit.principalIndex * tonPrice).toFixed(2)}</div>
                                     <div style={{color: "#1ecb81", fontSize: 13}}>APY {userTonAsset.depositAPY}%</div>
                                 </div>
                             </div>
-                            <div key='USDT' style={styles.assetRow}>
+                            <div key='USDT' style={styles.assetRow} onClick={() => router.push('/deposit/usdt')}>
                                 <img src='/images/usdt_logo.png' alt='USDT' style={styles.assetIcon}/>
                                 <div style={{flex: 1}}>
                                     <div style={{fontWeight: 700}}>USDT</div>
@@ -480,7 +463,7 @@ const HomePage = () => {
                                     <div style={{
                                         color: "#888",
                                         fontSize: 13
-                                    }}>${(userUsdtAsset.deposit).toFixed(2)}</div>
+                                    }}>${(userUsdtDeposit.shareAmount).toFixed(2)}</div>
                                     <div style={{color: "#1ecb81", fontSize: 13}}>APY {userUsdtAsset.depositAPY}%</div>
                                 </div>
                             </div>
