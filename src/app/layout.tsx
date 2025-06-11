@@ -22,10 +22,9 @@ export default function RootLayout({
             maxWidth: "480px",
             margin: "0 auto",
         }}>
-        <TonConnectUIProvider manifestUrl="https://tonloan.com/tonconnect-manifest.json">
+        <TonConnectUIProvider manifestUrl="https://dev.bnbpunks.com/tonconnect-manifest.json">
         <Header />
             {children}
-        <Footer  />
         </TonConnectUIProvider>
         </body>
         </html>

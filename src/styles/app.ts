@@ -110,7 +110,7 @@ const styles = {
         margin: "0 auto",
     },
     depositBtn: {
-        background: "#3b82f6",
+        background: "black",
         color: "#fff",
         border: "none",
         borderRadius: 12,
