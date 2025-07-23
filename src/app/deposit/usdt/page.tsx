@@ -70,7 +70,7 @@ export default function BorrowSummaryPage() {
             fontSize: 20,
             cursor: 'pointer',
           }}
-          onClick={() => router.push(`/deposit/withdraw-ton`)}
+          onClick={() => router.push(`/deposit/withdraw-usdt`)}
         >
           <span style={{ marginRight: 8 }}>↩</span> Withdraw
         </button>

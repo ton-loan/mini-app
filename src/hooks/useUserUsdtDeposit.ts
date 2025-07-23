@@ -8,8 +8,8 @@ export interface UserDeposit {
     principalIndex: number;
 }
 
-export function useUserTonDeposit(userAddress: string): UserDeposit {
-    const [userTonDeposit, setUserTonDeposit] = useState<UserDeposit>({
+export function useUserUsdtDeposit(userAddress: string): UserDeposit {
+    const [userUsdtDeposit, setUserUsdtDeposit] = useState<UserDeposit>({
         shareAmount: 0,
         principalIndex: 0
     });
@@ -25,16 +25,16 @@ export function useUserTonDeposit(userAddress: string): UserDeposit {
 
             const userCell = beginCell().storeAddress(Address.parse(userAddress)).endCell();
 
-            const userTonRes = await client.runMethod(TonLoanContract, "getUserTonDeposit", [
+            const userTonRes = await client.runMethod(TonLoanContract, "getUserUsdtDeposit", [
                 { type: "slice", cell: userCell }
             ]);
 
-            setUserTonDeposit({
+            setUserUsdtDeposit({
                 shareAmount: Number(fromNano(userTonRes.stack.readBigNumber())),
                 principalIndex: Number(userTonRes.stack.readBigNumber().toString()),
             });
         })();
     }, [userAddress]);
 
-    return userTonDeposit;
+    return userUsdtDeposit;
 }

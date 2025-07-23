@@ -7,6 +7,8 @@ import {SendTransactionRequest, useTonAddress, useTonConnectUI} from "@tonconnec
 import {Address, beginCell, toNano} from "@ton/core";
 import {TonLoanContract, TransactionNetwork} from "@/config";
 import {useUserTonDeposit} from "@/hooks/useUserTonDeposit";
+import {useUsdtBalance} from "@/hooks/useUsdtBalance";
+import {useUserUsdtDeposit} from "@/hooks/useUserUsdtDeposit";
 
 const assetMap = {
     ton: {
@@ -27,7 +29,7 @@ const assetMap = {
 };
 
 export default function DepositPage() {
-    const symbol = 'ton';
+    const symbol = 'usdt';
     const router = useRouter();
     const asset = assetMap[symbol as 'ton' | 'usdt'] || assetMap.ton;
     const [amount, setAmount] = useState('');
@@ -35,9 +37,9 @@ export default function DepositPage() {
     const {guardianSetIndex, tonPrice} = useTonPrice();
     // 存储用户基本信息
     const userAddress = useTonAddress();
-    const tonBalance: number = useTonBalance(userAddress);
+    const { usdtBalance } = useUsdtBalance(userAddress);
     // 获取用户TON质押信息
-    const userTonDeposit = useUserTonDeposit(userAddress);
+    const userTonDeposit = useUserUsdtDeposit(userAddress);
     console.log(userTonDeposit);
     // 计算美元价值
     const usdValue = amount ? (parseFloat(amount) * tonPrice).toFixed(2) : '0.00';
@@ -45,7 +47,7 @@ export default function DepositPage() {
     // 快捷选择
     const handlePercent = (p: number) => {
         setPercent(p);
-        setAmount((((userTonDeposit.shareAmount * userTonDeposit.principalIndex) * p) / 100).toFixed(2));
+        setAmount(((userTonDeposit.shareAmount * userTonDeposit.principalIndex) * p).toFixed(2));
     };
 
     // 处理质押
@@ -56,18 +58,18 @@ export default function DepositPage() {
             return;
         }
 
-        const tonAmount: number = parseFloat(amount);
-        if (isNaN(tonAmount) || tonAmount <= 0) {
+        const usdtAmount: number = parseFloat(amount);
+        if (isNaN(usdtAmount) || usdtAmount <= 0) {
             alert("请输入有效的取款金额！");
             return;
         }
-        console.log('用户质押金额：' + tonAmount)
+        console.log('用户质押金额：' + usdtAmount)
 
         const message = beginCell()
-            .storeUint(10087, 32)
-            .storeUint(toNano(tonAmount), 64)
+            .storeUint(10004, 32)
+            .storeUint(toNano(usdtAmount), 64)
             .endCell();
-        console.log("整体交易费用" + (0.1 + tonAmount))
+        console.log("整体交易费用" + (0.1))
         // 创建交易并发送
         const transaction: SendTransactionRequest = {
             validUntil: 0,
@@ -75,7 +77,7 @@ export default function DepositPage() {
             messages: [
                 {
                     address: TonLoanContract.toString(),
-                    amount: toNano(0.1 + tonAmount).toString(),  // 交易费用
+                    amount: toNano(0.1).toString(),  // 交易费用
                     payload: message.toBoc().toString('base64'),
                 }
             ]
@@ -188,9 +190,9 @@ export default function DepositPage() {
             {/* 资产信息 */}
             <div style={{marginTop: 24}}>
                 <InfoRow label="Deposit Balance"
-                         value={`${(userTonDeposit.principalIndex * userTonDeposit.shareAmount)} ${asset.name}`}
+                         value={`${(userTonDeposit.principalIndex * userTonDeposit.shareAmount * 1000)} ${asset.name}`}
                          icon={asset.icon}/>
-                <InfoRow label="Wallet Balance" value={`${tonBalance} ${asset.name}`} icon={asset.icon}/>
+                <InfoRow label="Wallet Balance" value={`${usdtBalance} ${asset.name}`} icon={asset.icon}/>
                 <InfoRow label="Health Factor" value="100% → 100%"/>
                 <InfoRow label="Organic APY" value={`${asset.apy}%`}/>
                 <InfoRow label="Utilization" value={`${asset.utilization}%`} tooltip="Utilization rate of the pool"/>
